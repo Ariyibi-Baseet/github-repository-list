@@ -50,13 +50,67 @@
                 class="form-control form-control-lg mb-3 shadow-none"
                 type="text"
                 placeholder="Your github username"
+                v-model="githubUsername"
                 aria-label=".form-control-lg example"
               />
               <button
-                class="btn btn-block btn-gradient-gold form-control form-control-lg fs-5 text-white"
+                class="btn btn-block btn-gradient-gold form-control form-control-lg fs-5 text-white shadow-none"
+                @click="githubUsernames = githubUsername"
+                :disabled="!isValidInput"
+                data-bs-toggle="modal"
+                data-bs-target="#staticBackdrop"
               >
                 Fetch My Repositories
               </button>
+
+              <!-- <ul>
+                <li v-for="repo in data" :key="repo.id">
+                  {{ repo.name }}
+                </li>
+              </ul> -->
+
+              <!-- List of repositories in modal -->
+              <div
+                class="modal fade"
+                id="staticBackdrop"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                tabindex="-1"
+                aria-labelledby="staticBackdropLabel"
+                aria-hidden="true"
+              >
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                        {{ githubUsernames }}
+                      </h1>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      <ul class="list-group">
+                        <li class="list-group-item" v-for="repo in data" :key="repo.id">
+                          {{ repo.name }}
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="modal-footer">
+                      <button
+                        type="button"
+                        class="btn btn-block btn-gradient-gold text-white"
+                        data-bs-dismiss="modal"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </form>
           </div>
         </div>
@@ -67,6 +121,8 @@
 
 <script>
 import NavBar from "@/components/Nav.vue";
+import { ref, watch, reactive, toRefs, computed } from "vue";
+import { useToast } from "vue-toastification";
 export default {
   name: "HomeView",
   components: {
@@ -77,7 +133,38 @@ export default {
       handDrawnArrow: "/img/scribble-svgrepo-com.svg",
     };
   },
-  setup() {},
+  setup() {
+    const githubUsername = ref(null);
+    const githubUsernames = ref(null);
+    const isValidInput = computed(() => githubUsernames.value !== "");
+    const state = reactive({ data: [] });
+    const toast = useToast();
+
+    watch(() => {
+      if (githubUsernames.value)
+        fetch(`https://api.github.com/users/${githubUsernames.value}/repos`)
+          .then((response) => response.json())
+          .then((data) => {
+            state.data = data;
+            console.log(data);
+            if (data.message == "Not Found") {
+              toast.error("This username is not registered on github");
+            } else if (data.message == undefined) {
+              toast.success("This user is registered on Github");
+            }
+            console.log("messages", data.message);
+            githubUsername.value = "";
+          });
+    });
+
+    return {
+      githubUsername,
+      githubUsernames,
+      toast,
+      ...toRefs(state),
+      isValidInput,
+    };
+  },
 };
 </script>
 
