@@ -42,7 +42,7 @@
         </div>
         <div class="col-md-6 mb-3 content-wrapper">
           <div class="content-n-form">
-            <p class="text-end text-white mt-5 fs-4">
+            <p class="text-center text-white mt-5 fs-4">
               Please input your Github username here
             </p>
             <form class="mt-3 github-username-form">
