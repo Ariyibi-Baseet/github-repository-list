@@ -50,13 +50,13 @@
                 class="form-control form-control-lg mb-3 shadow-none"
                 type="text"
                 placeholder="Your github username"
-                v-model="githubUsername"
+                v-model="githubUsernames"
                 aria-label=".form-control-lg example"
               />
               <button
                 class="btn btn-block btn-gradient-gold form-control form-control-lg fs-5 text-white shadow-none"
-                @click="githubUsernames = githubUsername"
-                :disabled="!isValidInput"
+                @click="githubRepo()"
+                :disabled="isInvalid"
                 data-bs-toggle="modal"
                 data-bs-target="#staticBackdrop"
               >
@@ -121,7 +121,7 @@
 
 <script>
 import NavBar from "@/components/Nav.vue";
-import { ref, watch, reactive, toRefs, computed } from "vue";
+import { ref, reactive, toRefs, computed } from "vue";
 import { useToast } from "vue-toastification";
 export default {
   name: "HomeView",
@@ -134,14 +134,13 @@ export default {
     };
   },
   setup() {
-    const githubUsername = ref(null);
     const githubUsernames = ref(null);
-    const isValidInput = computed(() => githubUsernames.value !== "");
     const state = reactive({ data: [] });
+    const isInvalid = computed(() => githubUsernames.value == "");
     const toast = useToast();
 
-    watch(() => {
-      if (githubUsernames.value)
+    function githubRepo() {
+      if (githubUsernames.value) {
         fetch(`https://api.github.com/users/${githubUsernames.value}/repos`)
           .then((response) => response.json())
           .then((data) => {
@@ -153,16 +152,17 @@ export default {
               toast.success("This user is registered on Github");
             }
             console.log("messages", data.message);
-            githubUsername.value = "";
+            githubUsernames.value = "";
           });
-    });
+      }
+    }
 
     return {
-      githubUsername,
       githubUsernames,
+      isInvalid,
+      githubRepo,
       toast,
       ...toRefs(state),
-      isValidInput,
     };
   },
 };
